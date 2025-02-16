@@ -66,7 +66,7 @@ if st.button("Fetch Data"):
                         views = int(video_stats["statistics"].get("viewCount", 0))
                         subs = int(channel_stats["statistics"].get("subscriberCount", 0))
 
-                        if subs < 3000:
+                        if subs < 1000:
                             all_results.append({
                                 "Title": title,
                                 "Description": description,
