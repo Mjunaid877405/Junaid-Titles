@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import os
 
 # YouTube API Key (use environment variable or Streamlit secrets)
-API_KEY = os.getenv("YOUTUBE_API_KEY")  # Ensure you set the environment variable correctly
+API_KEY = os.getenv("AIzaSyD1yebvf2bpu0A9E6v4w5MhRzGGmaSG7Io")  # Ensure you set the environment variable correctly
 
 YOUTUBE_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 YOUTUBE_VIDEO_URL = "https://www.googleapis.com/youtube/v3/videos"
