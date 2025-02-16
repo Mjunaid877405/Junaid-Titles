@@ -1,7 +1,6 @@
 import requests
 
-# Replace 'YOUR_API_KEY' with your actual API Key
-API_KEY = AIzaSyD1yebvf2bpu0A9E6v4w5MhRzGGmaSG7Io'
+API_KEY = 'AIzaSyD1yebvf2bpu0A9E6v4w5MhRzGGmaSG7Io'
 CHANNEL_ID = 'UC_x5XG1OV2P6uZZ5FSM9Ttw'  # This is a public YouTube channel ID for testing
 
 def test_youtube_api(api_key):
