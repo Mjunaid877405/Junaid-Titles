@@ -58,4 +58,33 @@ if st.button("Fetch Data"):
                     channel_response = requests.get(YOUTUBE_CHANNEL_URL, params={"part": "statistics", "id": channel_id, "key": API_KEY})
 
                     if stats_response.status_code == 200 and channel_response.status_code == 200:
-                        video_stats = stats
+                        video_stats = stats_response.json().get("items", [{}])[0]
+                        channel_stats = channel_response.json().get("items", [{}])[0]
+                        title = video["snippet"].get("title", "N/A")
+                        description = video["snippet"].get("description", "")[:200]
+                        video_url = f"https://www.youtube.com/watch?v={video_id}"
+                        views = int(video_stats["statistics"].get("viewCount", 0))
+                        subs = int(channel_stats["statistics"].get("subscriberCount", 0))
+
+                        if subs < 3000:
+                            all_results.append({
+                                "Title": title,
+                                "Description": description,
+                                "URL": video_url,
+                                "Views": views,
+                                "Subscribers": subs
+                            })
+            else:
+                st.error(f"Failed to fetch data for keyword: {keyword}. Status code: {response.status_code}")
+
+        # Display results if any
+        if all_results:
+            st.success(f"Found {len(all_results)} results across all keywords!")
+            st.dataframe(all_results)
+        else:
+            st.warning("No results found for channels with fewer than 3,000 subscribers.")
+
+    except requests.exceptions.RequestException as e:
+        st.error(f"API request failed: {e}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
