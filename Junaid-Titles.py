@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import os
 
 # YouTube API Key (use environment variable or Streamlit secrets)
-API_KEY = os.getenv("AIzaSyDp5L0O_tdYbfV4iX_iH5JcNa37cvxxUsc")  # Ensure you set the environment variable correctly
+API_KEY = os.getenv("YOUTUBE_API_KEY")  # Ensure you set the environment variable correctly
 
 YOUTUBE_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 YOUTUBE_VIDEO_URL = "https://www.googleapis.com/youtube/v3/videos"
@@ -29,57 +29,58 @@ keywords = [
 
 # Fetch Data Button
 if st.button("Fetch Data"):
-    start_date = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    all_results = []
+    try:
+        start_date = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        all_results = []
 
-    for keyword in keywords:
-        search_params = {
-            "part": "snippet",
-            "q": keyword,
-            "type": "video",
-            "order": "viewCount",
-            "publishedAfter": start_date,
-            "maxResults": 5,
-            "key": API_KEY,
-        }
+        for keyword in keywords:
+            search_params = {
+                "part": "snippet",
+                "q": keyword,
+                "type": "video",
+                "order": "viewCount",
+                "publishedAfter": start_date,
+                "maxResults": 5,
+                "key": API_KEY,
+            }
 
-        response = requests.get(YOUTUBE_SEARCH_URL, params=search_params)
-        if response.status_code == 200:
-            videos = response.json().get("items", [])
-            for video in videos:
-                video_id = video["id"]["videoId"]
-                channel_id = video["snippet"]["channelId"]
+            response = requests.get(YOUTUBE_SEARCH_URL, params=search_params)
+            if response.status_code == 200:
+                videos = response.json().get("items", [])
+                for video in videos:
+                    video_id = video["id"]["videoId"]
+                    channel_id = video["snippet"]["channelId"]
 
-                stats_response = requests.get(YOUTUBE_VIDEO_URL, params={"part": "statistics", "id": video_id, "key": API_KEY})
-                channel_response = requests.get(YOUTUBE_CHANNEL_URL, params={"part": "statistics", "id": channel_id, "key": API_KEY})
+                    stats_response = requests.get(YOUTUBE_VIDEO_URL, params={"part": "statistics", "id": video_id, "key": API_KEY})
+                    channel_response = requests.get(YOUTUBE_CHANNEL_URL, params={"part": "statistics", "id": channel_id, "key": API_KEY})
 
-                if stats_response.status_code == 200 and channel_response.status_code == 200:
-                    video_stats = stats_response.json().get("items", [{}])[0]
-                    channel_stats = channel_response.json().get("items", [{}])[0]
-                    title = video["snippet"].get("title", "N/A")
-                    description = video["snippet"].get("description", "")[:200]
-                    video_url = f"https://www.youtube.com/watch?v={video_id}"
-                    views = int(video_stats["statistics"].get("viewCount", 0))
-                    subs = int(channel_stats["statistics"].get("subscriberCount", 0))
+                    if stats_response.status_code == 200 and channel_response.status_code == 200:
+                        video_stats = stats_response.json().get("items", [{}])[0]
+                        channel_stats = channel_response.json().get("items", [{}])[0]
+                        title = video["snippet"].get("title", "N/A")
+                        description = video["snippet"].get("description", "")[:200]
+                        video_url = f"https://www.youtube.com/watch?v={video_id}"
+                        views = int(video_stats["statistics"].get("viewCount", 0))
+                        subs = int(channel_stats["statistics"].get("subscriberCount", 0))
 
-                    if subs < 3000:
-                        all_results.append({
-                            "Title": title,
-                            "Description": description,
-                            "URL": video_url,
-                            "Views": views,
-                            "Subscribers": subs
-                        })
+                        if subs < 3000:
+                            all_results.append({
+                                "Title": title,
+                                "Description": description,
+                                "URL": video_url,
+                                "Views": views,
+                                "Subscribers": subs
+                            })
+            else:
+                st.error(f"Failed to fetch data for keyword: {keyword}. Status code: {response.status_code}")
+
+        if all_results:
+            st.success(f"Found {len(all_results)} results across all keywords!")
+            st.dataframe(all_results)
         else:
-            st.error(f"Failed to fetch data for keyword: {keyword}. Status code: {response.status_code}")
+            st.warning("No results found for channels with fewer than 3,000 subscribers.")
 
-    if all_results:
-        st.success(f"Found {len(all_results)} results across all keywords!")
-        st.dataframe(all_results)
-    else:
-        st.warning("No results found for channels with fewer than 3,000 subscribers.")
-
-except requests.exceptions.RequestException as e:
-    st.error(f"API request failed: {e}")
-except Exception as e:
-    st.error(f"An unexpected error occurred: {e}")
+    except requests.exceptions.RequestException as e:
+        st.error(f"API request failed: {e}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
